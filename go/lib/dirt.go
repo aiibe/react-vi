@@ -6,20 +6,36 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/samber/lo"
 )
 
-func ReadLines(path string) {
-	file, err := os.Open(path)
+func lineHasImport(ext string, line string) bool {
+	if ext == ".tsx" {
+		return strings.HasPrefix(line, "import")
+	}
+	return false
+}
+
+func ReadLines(filePath string) {
+	file, err := os.Open(filePath)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
+
+	// Filter only lines start with import
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
+		line := scanner.Text()
+		isImportLine := lineHasImport(".tsx", line)
+
+		if isImportLine {
+			fmt.Println(line)
+		}
+
 	}
 }
 
@@ -48,10 +64,13 @@ func Scan(sourceDir string) {
 
 	// Read lines
 	lo.ForEach(tsxFiles, func(file fs.FileInfo, index int) {
-		status := fmt.Sprintf("%s - %d Bytes", file.Name(), file.Size())
-		fmt.Println(status)
+		fileInfo := fmt.Sprintf("%s - %d Bytes", file.Name(), file.Size())
+		fmt.Println(fileInfo)
+		fmt.Println("-------------------")
 
 		filePath := sourceDir + "/" + file.Name()
 		ReadLines(filePath)
+
+		fmt.Println("")
 	})
 }
