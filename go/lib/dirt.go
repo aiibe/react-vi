@@ -1,6 +1,7 @@
 package dirt
 
 import (
+	"bufio"
 	"fmt"
 	"io/fs"
 	"os"
@@ -8,6 +9,19 @@ import (
 
 	"github.com/samber/lo"
 )
+
+func ReadLines(path string) {
+	file, err := os.Open(path)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+}
 
 func Scan(sourceDir string) {
 
@@ -28,13 +42,16 @@ func Scan(sourceDir string) {
 	}
 
 	// Filter .tsx files
-	tsxFiles := lo.Filter(files, func(x fs.FileInfo, index int) bool {
-		return filepath.Ext(x.Name()) == ".tsx"
+	tsxFiles := lo.Filter(files, func(file fs.FileInfo, index int) bool {
+		return filepath.Ext(file.Name()) == ".tsx"
 	})
 
-	// Print tsx files
-	for _, file := range tsxFiles {
+	// Read lines
+	lo.ForEach(tsxFiles, func(file fs.FileInfo, index int) {
 		status := fmt.Sprintf("%s - %d Bytes", file.Name(), file.Size())
 		fmt.Println(status)
-	}
+
+		filePath := sourceDir + "/" + file.Name()
+		ReadLines(filePath)
+	})
 }

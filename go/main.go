@@ -1,6 +1,8 @@
 package main
 
-import dirt "souksyp/react-vi/lib"
+import (
+	dirt "souksyp/react-vi/lib"
+)
 
 // Run main app
 func main() {
