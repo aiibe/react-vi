@@ -5,76 +5,22 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/samber/lo"
 )
 
 const (
 	TSX = ".tsx"
+	TS  = ".ts"
 )
-
-func cleanString(str string, toReplace []string) string {
-	lo.ForEach(toReplace, func(char string, index int) {
-		str = strings.ReplaceAll(str, char, "")
-	})
-	return str
-}
-
-func getLib(line string, sourcePath string) (string, string) {
-	str := strings.Split(line, " ")
-	length := len(str)
-
-	// Access the element at the last index of the array
-	last := str[length-1]
-
-	// Clean
-	subs := []string{`'`, `"`, `;`}
-	name := cleanString(last, subs)
-
-	// Get filename
-	str2 := strings.Split(name, "/")
-	length2 := len(str2)
-	finalName := str2[length2-1]
-
-	// Source of file
-	sourceFilePath := strings.ReplaceAll(name, "./", sourcePath+"/")
-
-	filePath := filepath.Ext((name))
-	if filePath == "" {
-		sourceFilePath += TSX
-		finalName += TSX
-
-	}
-
-	return finalName, sourceFilePath
-}
-
-func lineHasLib(line string, ext string) bool {
-	if ext == TSX {
-		return strings.HasPrefix(line, "import")
-	}
-	return false
-}
-
-func hightlight(name string, ext string) string {
-	blue := color.New(color.FgBlue).SprintFunc()
-
-	if filepath.Ext(name) == TSX {
-		return blue(name)
-	}
-
-	return name
-}
 
 func sayFileSize(level int, fullPath string) string {
 	branch := strings.Repeat("-", level-1)
 	fileInfo, _ := os.Stat(fullPath)
 
 	fileName := fileInfo.Name()
-	fileName = hightlight(fileName, TSX)
+	fileName = hightlightTSX(fileName, TSX)
 
 	if len(branch) == 0 {
 		return fmt.Sprintf("%s (%d B)", fileName, fileInfo.Size())

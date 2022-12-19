@@ -8,7 +8,7 @@ import (
 func main() {
 
 	// Source dir
-	sourcePath := "../src"
+	sourcePath := "../src/"
 
 	// Read src files
 	dirt.Scan(sourcePath)
