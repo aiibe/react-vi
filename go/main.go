@@ -5,7 +5,7 @@ import (
 )
 
 // Run main app
-func main() {
+func main2() {
 
 	// Source dir
 	sourcePath := "../src/"
