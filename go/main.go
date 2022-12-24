@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"souksyp/react-vi/dirt"
@@ -14,9 +15,11 @@ import (
 func main() {
 	start := time.Now()
 
+	root := flag.String("d", "./src", "a string")
+	flag.Parse()
+
 	// Store all files/directories within root directory
-	const root = "../src"
-	store.NodesMap = dirt.Scan(root)
+	store.NodesMap = dirt.Scan(*root)
 	store.ScanNodesDependencies()
 
 	// Marshal Indent
@@ -28,5 +31,5 @@ func main() {
 
 	fmt.Println("-------------")
 	elapsed := time.Since(start)
-	fmt.Println(elapsed)
+	fmt.Println(elapsed, *root)
 }
