@@ -23,7 +23,7 @@ func lineHasLib(line string, ext string) bool {
 
 // Read import line
 // Get lib's filename and path to its the source
-func getLibFromLine(line string) string {
+func getLibNameFromLine(line string) string {
 
 	// Split line into workable blocks
 	lineBlocks := strings.Split(line, " ")
