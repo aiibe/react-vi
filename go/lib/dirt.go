@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"strings"
-
-	"github.com/samber/lo"
+	"path/filepath"
 )
 
 const (
@@ -15,24 +13,22 @@ const (
 	TS  = ".ts"
 )
 
-func sayFileSize(level int, fullPath string) string {
-	branch := strings.Repeat("-", level-1)
-	fileInfo, _ := os.Stat(fullPath)
+// func printFileSize(level int, fullPath string) string {
+// 	branch := strings.Repeat("-", level-1)
+// 	fileInfo, _ := os.Stat(fullPath)
 
-	fileName := fileInfo.Name()
-	fileName = hightlightTSX(fileName, TSX)
+// 	fileName := fileInfo.Name()
+// 	fileName = hightlightTSX(fileName, TSX)
 
-	if len(branch) == 0 {
-		return fmt.Sprintf("%s (%d B)", fileName, fileInfo.Size())
-	} else {
-		return fmt.Sprintf("%s %s (%d B)", branch, fileName, fileInfo.Size())
-	}
-}
+// 	if len(branch) == 0 {
+// 		return fmt.Sprintf("%s (%d B)", fileName, fileInfo.Size())
+// 	} else {
+// 		return fmt.Sprintf("%s %s (%d B)", branch, fileName, fileInfo.Size())
+// 	}
+// }
 
-func readFileLines(sourcePath string, fileName string, level int) {
-
-	// Get full path
-	fullPath := sourcePath + "/" + fileName
+func ReadFileLines(fullPath string, fileName string, level int) []string {
+	var dependencies []string
 
 	// Open file
 	file, err := os.Open(fullPath)
@@ -40,10 +36,6 @@ func readFileLines(sourcePath string, fileName string, level int) {
 		panic(err)
 	}
 	defer file.Close()
-
-	// Announcer
-	say := sayFileSize(level, fullPath)
-	fmt.Println(say)
 
 	// Scan line by line
 	scanner := bufio.NewScanner(file)
@@ -54,54 +46,38 @@ func readFileLines(sourcePath string, fileName string, level int) {
 
 		// Filter import lines
 		if hasImportLine {
-			libName, libPath := getLib(line, sourcePath)
-
-			// Show only local lib
-			if strings.HasPrefix(libPath, sourcePath) {
-				if _, err := os.Stat(libPath); os.IsNotExist(err) {
-					// fmt.Println("Not found", libName)
-
-				} else {
-					// fmt.Println("Found", libName, "in", fileName)
-					readFileLines(sourcePath, libName, level+1)
-				}
-			}
+			libFileName := getLibFromLine(line)
+			dependencies = append(dependencies, libFileName)
 		}
 	}
 
+	return dependencies
 }
 
-func Scan(sourceDir string) {
+type FileInfo struct {
+	Name         string
+	IsDir        bool
+	Path         string
+	Dependencies []string
+}
 
-	// Read dir
-	dir, err := os.Open(sourceDir)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+func MapFiles(sourceDir string) map[string]FileInfo {
+	Files := map[string]FileInfo{}
 
-	defer dir.Close()
+	err := filepath.WalkDir(sourceDir, func(path string, file fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
 
-	// Read files in dir
-	files, err := dir.Readdir(-1)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+		entryFound := FileInfo{Name: file.Name(), IsDir: file.IsDir(), Path: path, Dependencies: []string{}}
+		Files[entryFound.Name] = entryFound
 
-	// Get index.tsx
-	entryFiles := lo.Filter(files, func(file fs.FileInfo, index int) bool {
-		return file.Name() == "index.tsx"
+		return nil
 	})
 
-	// Read lines for each entry file
-	lo.ForEach(entryFiles, func(file fs.FileInfo, index int) {
-		fileInfo := fmt.Sprintf("%s - %d Bytes", file.Name(), file.Size())
-		fmt.Println(fileInfo)
-		fmt.Println("-------------------")
+	if err != nil {
+		fmt.Println(err)
+	}
 
-		readFileLines(sourceDir, file.Name(), 1)
-
-		fmt.Println("")
-	})
+	return Files
 }

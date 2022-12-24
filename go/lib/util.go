@@ -1,11 +1,9 @@
 package dirt
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/samber/lo"
 )
 
@@ -23,19 +21,9 @@ func lineHasLib(line string, ext string) bool {
 	return false
 }
 
-func hightlightTSX(name string, ext string) string {
-	blue := color.New(color.FgBlue).SprintFunc()
-
-	if filepath.Ext(name) == TSX {
-		return blue(name)
-	}
-
-	return name
-}
-
 // Read import line
 // Get lib's filename and path to its the source
-func getLib(line string, sourcePath string) (string, string) {
+func getLibFromLine(line string) string {
 
 	// Split line into workable blocks
 	lineBlocks := strings.Split(line, " ")
@@ -53,19 +41,10 @@ func getLib(line string, sourcePath string) (string, string) {
 	pathBlocksLength := len(pathBlocks)
 	libName := pathBlocks[pathBlocksLength-1]
 
-	// Build lib's full path
-	sourceFilePath := strings.ReplaceAll(libPath, "./", sourcePath)
-
-	red := color.New(color.FgGreen).SprintFunc()
-	fmt.Println(red(libName, "|", sourceFilePath))
-
-	// Possibly an .tsx or .ts import
-	fileExt := filepath.Ext((libPath))
-	if fileExt == "" {
-		// !!! mutation
-		sourceFilePath += TSX
+	// Possibly an .tsx  import
+	if filepath.Ext((libPath)) == "" {
 		libName += TSX
 	}
 
-	return libName, sourceFilePath
+	return libName
 }
