@@ -24,15 +24,12 @@ func FilterTSX() []dirt.FileNode {
 
 // Scan dependencies
 func ScanNodesDependencies() {
-	tsxFiles := FilterTSX()
+	// tsxFiles := FilterTSX()
 
-	for _, file := range tsxFiles {
+	for _, file := range NodesMap {
 		depNames := dirt.GetDependencies(file.Path, file.Name)
 		for _, depName := range depNames {
-			isTS := filepath.Ext(depName) == dirt.TSX || filepath.Ext(depName) == dirt.TS
-			if isTS {
-				updateDependencies(file.Name, depName)
-			}
+			updateDependencies(file.Name, depName)
 		}
 	}
 }
