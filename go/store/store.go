@@ -29,8 +29,8 @@ func ScanNodesDependencies() {
 	for _, file := range tsxFiles {
 		depNames := dirt.GetDependencies(file.Path, file.Name)
 		for _, depName := range depNames {
-			isTSX := filepath.Ext(depName) == dirt.TSX
-			if isTSX {
+			isTS := filepath.Ext(depName) == dirt.TSX || filepath.Ext(depName) == dirt.TS
+			if isTS {
 				updateDependencies(file.Name, depName)
 			}
 		}

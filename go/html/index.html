@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>React Vi</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="//unpkg.com/force-graph"></script>
+    <script type="module">
+      (async () => {
+        try {
+          // Get files map from backend
+          const resp = await fetch("/data");
+          const data = await resp.json();
+
+          // Get .tsx nodes
+          const nodes = Object.keys(data).filter(
+            (name) => name.endsWith(".tsx") || name.endsWith(".ts")
+          );
+
+          // Get nodes linked
+          const links = Object.values(data).reduce((acc, item) => {
+            const deps = item.Dependencies;
+
+            if (!!deps.length) {
+              deps.forEach((dep) => {
+                acc.push({ source: dep, target: item.Name });
+              });
+            }
+
+            return acc;
+          }, []);
+
+          // Pack nodes
+          const graphData = { nodes, links };
+
+          // Draw graph
+          const Graph = ForceGraph();
+          Graph(document.getElementById("root"))
+            .linkDirectionalParticles(2)
+            .graphData(graphData);
+        } catch (error) {
+          console.log("Error load data...", error);
+        }
+      })();
+    </script>
+  </body>
+</html>
