@@ -34,7 +34,7 @@ func buildStaticNodes() {
 	store.NodesMap = dirt.Scan(*root)
 
 	// Scan for deps inside files
-	store.ScanNodesDependencies()
+	store.ScanNodesDependencies(*root)
 
 	fmt.Println("Executed time", time.Since(start))
 }

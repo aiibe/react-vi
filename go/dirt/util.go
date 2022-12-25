@@ -14,16 +14,17 @@ func stripAll(str string, toReplace []string) string {
 	return str
 }
 
-func lineHasLib(line string, ext string) bool {
-	if ext == TSX {
-		return strings.HasPrefix(line, "import")
-	}
-	return false
+func isImportLine(line string) bool {
+	return strings.HasPrefix(line, "import")
+}
+
+func isExportLine(line string) bool {
+	return strings.HasPrefix(line, "export")
 }
 
 // Read import line
 // Get lib's filename and path to its the source
-func getLibNameFromLine(line string) string {
+func getLibNameFromLine(path string, name string, line string) string {
 
 	// Split line into workable blocks
 	lineBlocks := strings.Split(line, " ")
@@ -42,9 +43,11 @@ func getLibNameFromLine(line string) string {
 	libName := pathBlocks[pathBlocksLength-1]
 
 	// Possibly an .tsx  import
-	if filepath.Ext((libPath)) == "" {
+	if filepath.Ext((libPath)) != ".svg" || filepath.Ext((libPath)) != ".css" {
 		libName += TSX
 	}
 
-	return libName
+	libPath = strings.Replace(path, name, libName, 1)
+
+	return libPath
 }

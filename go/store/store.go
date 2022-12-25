@@ -23,23 +23,28 @@ func FilterTSX() []dirt.FileNode {
 }
 
 // Scan dependencies
-func ScanNodesDependencies() {
-	// tsxFiles := FilterTSX()
+func ScanNodesDependencies(rootPath string) {
 
 	for _, file := range NodesMap {
-		depNames := dirt.GetDependencies(file.Path, file.Name)
-		for _, depName := range depNames {
-			updateDependencies(file.Name, depName)
+		fileExt := filepath.Ext(file.Name)
+		isTSFile := (fileExt == dirt.TSX) || (fileExt == dirt.TS)
+
+		if isTSFile {
+			depNames := dirt.GetDependencies(rootPath, file.Path, file.Name)
+
+			for _, depName := range depNames {
+				updateDependencies(file.Id, depName)
+			}
 		}
 	}
 }
 
 // Update a file dependencies
-func updateDependencies(targetFileName string, dependencyName string) {
+func updateDependencies(targetFileId string, dependencyName string) {
 	_, ok := NodesMap[dependencyName]
 	if ok {
-		currentFile := NodesMap[targetFileName]
+		currentFile := NodesMap[targetFileId]
 		currentFile.Dependencies = append(currentFile.Dependencies, dependencyName)
-		NodesMap[targetFileName] = currentFile
+		NodesMap[targetFileId] = currentFile
 	}
 }

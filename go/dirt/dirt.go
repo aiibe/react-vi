@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 const (
@@ -16,13 +17,14 @@ const (
 )
 
 type FileNode struct {
+	Id           string
 	Name         string
 	IsDir        bool
 	Path         string
 	Dependencies []string
 }
 
-func GetDependencies(fullPath string, fileName string) []string {
+func GetDependencies(rootPath string, fullPath string, fileName string) []string {
 	var dependencies []string
 
 	// Open file
@@ -37,11 +39,16 @@ func GetDependencies(fullPath string, fileName string) []string {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		hasImportLine := lineHasLib(line, TSX)
 
-		// Filter import lines
-		if hasImportLine {
-			libFileName := getLibNameFromLine(line)
+		// Scan imported lib from line
+		if isImportLine(line) {
+			libFileName := getLibNameFromLine(fullPath, fileName, line)
+			dependencies = append(dependencies, libFileName)
+		}
+
+		// Is index.ts with export
+		if isExportLine(line) && strings.HasSuffix(fileName, "index.ts") {
+			libFileName := getLibNameFromLine(fullPath, fileName, line)
 			dependencies = append(dependencies, libFileName)
 		}
 	}
@@ -57,9 +64,9 @@ func Scan(sourceDir string) map[string]FileNode {
 			return err
 		}
 
-		entryFound := FileNode{Name: file.Name(), IsDir: file.IsDir(), Path: path, Dependencies: []string{}}
-		Files[entryFound.Name] = entryFound
-
+		// Populate files map
+		entryFound := FileNode{Id: path, Name: file.Name(), IsDir: file.IsDir(), Path: path, Dependencies: []string{}}
+		Files[entryFound.Id] = entryFound
 		return nil
 	})
 

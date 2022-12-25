@@ -24,16 +24,16 @@
           const orange = "#d6670d";
 
           // Get .tsx nodes
-          const nodes = Object.keys(data)
+          const nodes = Object.values(data)
             // .filter((name) => name.endsWith(".tsx") || name.endsWith(".ts"))
-            .map((name) => ({
-              id: name,
-              name,
-              color: name.endsWith(".tsx")
+            .map(({ Name, Id }) => ({
+              id: Id,
+              name: Name,
+              color: Name.endsWith(".tsx")
                 ? blueLight
-                : name.endsWith(".ts")
+                : Name.endsWith(".ts")
                 ? blueDark
-                : name.endsWith(".css")
+                : Name.endsWith(".css")
                 ? orange
                 : pale,
             }));
@@ -43,10 +43,10 @@
             const deps = item.Dependencies;
 
             if (!!deps.length) {
-              deps.forEach((dep) =>
+              deps.forEach((id) =>
                 acc.push({
-                  target: dep,
-                  source: item.Name,
+                  source: id,
+                  target: item.Id,
                   color: "#353e73",
                 })
               );
@@ -62,12 +62,13 @@
           const Graph = ForceGraph();
           const RootDOM = document.getElementById("root");
           Graph(RootDOM)
-            .linkDirectionalArrowLength(1)
+            .linkWidth(2)
+            .linkDirectionalArrowLength(5)
             .linkColor(pale)
             .graphData(graphData)
             .nodeId("id")
             .nodeCanvasObject((node, ctx, globalScale) => {
-              const label = node.id;
+              const label = node.name;
               const fontSize = 16 / globalScale;
               ctx.font = `${fontSize}px Sans-Serif`;
               const textWidth = ctx.measureText(label).width;
