@@ -1,4 +1,4 @@
-function Hello() {
+export function Hello() {
   return <div>Hello</div>;
 }
 

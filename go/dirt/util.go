@@ -1,6 +1,7 @@
 package dirt
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -34,20 +35,28 @@ func getLibNameFromLine(path string, name string, line string) string {
 	lastBlock := lineBlocks[lineBlocksLength-1]
 
 	// Get the lib's path clean
-	toRemove := []string{`'`, `"`, `;`}
+	toRemove := []string{`'`, `"`, `;`, `./`}
 	libPath := stripAll(lastBlock, toRemove)
 
-	// Get the filename from the path
-	pathBlocks := strings.Split(libPath, "/")
-	pathBlocksLength := len(pathBlocks)
-	libName := pathBlocks[pathBlocksLength-1]
-
 	// Possibly an .tsx  import
-	if filepath.Ext((libPath)) != ".svg" || filepath.Ext((libPath)) != ".css" {
-		libName += TSX
+	if filepath.Ext((libPath)) != ".svg" && filepath.Ext((libPath)) != ".css" {
+		libPath3 := libPath + TSX
+		libPath2 := strings.Replace(path, name, libPath3, 1)
+
+		_, err := os.Stat(libPath2)
+		if err != nil {
+			if os.IsNotExist(err) {
+				libPath4 := libPath + "/index.ts"
+				libPath5 := strings.Replace(path, name, libPath4, 1)
+
+				_, err := os.Stat(libPath5)
+				if err == nil {
+					return libPath5
+				}
+			}
+		}
+		return libPath2
 	}
 
-	libPath = strings.Replace(path, name, libName, 1)
-
-	return libPath
+	return strings.Replace(path, name, libPath, 1)
 }

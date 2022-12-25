@@ -1,1 +1,1 @@
-export * from "./Hello.component";
+export { default as Hello } from "./Hello.component";
