@@ -2,7 +2,7 @@ package store
 
 import (
 	"path/filepath"
-	dirt "souksyp/react-vi/dirt"
+	"souksyp/react-vi/dirt"
 	"strings"
 )
 

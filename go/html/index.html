@@ -18,31 +18,30 @@
           const data = await resp.json();
 
           // Get .tsx nodes
-          const nodes = Object.keys(data).filter(
-            (name) => name.endsWith(".tsx") || name.endsWith(".ts")
-          );
+          const nodes = Object.keys(data)
+            .filter((name) => name.endsWith(".tsx") || name.endsWith(".ts"))
+            .map((name) => ({ id: name, name }));
 
           // Get nodes linked
           const links = Object.values(data).reduce((acc, item) => {
             const deps = item.Dependencies;
 
             if (!!deps.length) {
-              deps.forEach((dep) => {
-                acc.push({ source: dep, target: item.Name });
-              });
+              deps.forEach((dep) =>
+                acc.push({ source: dep, target: item.Name })
+              );
             }
-
             return acc;
           }, []);
 
           // Pack nodes
           const graphData = { nodes, links };
+          console.log(graphData);
 
           // Draw graph
           const Graph = ForceGraph();
-          Graph(document.getElementById("root"))
-            .linkDirectionalParticles(2)
-            .graphData(graphData);
+          const RootDOM = document.getElementById("root");
+          Graph(RootDOM).linkDirectionalParticles(2).graphData(graphData);
         } catch (error) {
           console.log("Error load data...", error);
         }

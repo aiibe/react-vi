@@ -1,6 +1,6 @@
 import logo from "./logo.svg";
 import "./App.css";
-import { Log } from "./utils/log";
+import { Log } from "./utils";
 
 function App() {
   return (
