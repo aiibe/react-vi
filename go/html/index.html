@@ -6,96 +6,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>React Vi</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
-  </head>
-  <body>
-    <div id="root"></div>
     <script src="//unpkg.com/force-graph"></script>
-    <script type="module">
+  </head>
+  <body style="margin: 0">
+    <div id="3d-graph"></div>
+    <script>
       (async () => {
-        try {
-          // Get files map from backend
-          const resp = await fetch("/data");
-          const data = await resp.json();
+        // Get files map from backend
+        const resp = await fetch("/data");
+        const data = await resp.json();
 
-          // Colors
-          const blueLight = "#3268f0";
-          const blueDark = "#6a23c2";
-          const pale = "#3b2f26";
-          const orange = "#d6670d";
+        // Colors
+        const blueLight = "#3268f0";
+        const blueDark = "#6a23c2";
+        const pale = "#3b2f26";
+        const orange = "#d6670d";
 
-          // Get .tsx nodes
-          const nodes = Object.values(data)
-            // .filter((name) => name.endsWith(".tsx") || name.endsWith(".ts"))
-            .map(({ Name, Id }) => ({
-              id: Id,
-              name: Name,
-              color: Name.endsWith(".tsx")
-                ? blueLight
-                : Name.endsWith(".ts")
-                ? blueDark
-                : Name.endsWith(".css")
-                ? orange
-                : pale,
-            }));
+        // Get .tsx nodes
+        const nodes = Object.values(data)
+          // .filter((name) => name.endsWith(".tsx") || name.endsWith(".ts"))
+          .map(({ Name, Id }) => ({
+            id: Id,
+            name: Name,
+            color: Name.endsWith(".tsx")
+              ? blueLight
+              : Name.endsWith(".ts")
+              ? blueDark
+              : Name.endsWith(".css")
+              ? orange
+              : pale,
+          }));
 
-          // Get nodes linked
-          const links = Object.values(data).reduce((acc, item) => {
-            const deps = item.Dependencies;
+        // Get nodes linked
+        const links = Object.values(data).reduce((acc, item) => {
+          const deps = item.Dependencies;
 
-            if (!!deps.length) {
-              deps.forEach((id) =>
-                acc.push({
-                  source: id,
-                  target: item.Id,
-                  color: "#353e73",
-                })
-              );
-            }
-            return acc;
-          }, []);
+          if (!!deps.length) {
+            deps.forEach((id) =>
+              acc.push({
+                source: id,
+                target: item.Id,
+                color: "#353e73",
+              })
+            );
+          }
+          return acc;
+        }, []);
 
-          // Pack nodes
-          const graphData = { nodes, links };
-          console.log(graphData);
+        const Graph = ForceGraph()(document.getElementById("3d-graph"))
+          .graphData({ nodes, links })
+          .backgroundColor("#E9F0FF")
+          .linkColor(() => "#172D74")
+          .linkWidth(1)
+          .nodeRelSize(12)
+          .nodeCanvasObject((node, ctx) => {
+            const label = node.name;
+            const fontSize = 6;
+            ctx.font = `${fontSize}px Sans-Serif`;
+            const textWidth = ctx.measureText(label).width;
+            const bckgDimensions = [textWidth, fontSize].map(
+              (n) => n + fontSize * 0.5
+            ); // some padding
 
-          // Draw graph
-          const Graph = ForceGraph();
-          const RootDOM = document.getElementById("root");
-          Graph(RootDOM)
-            .linkWidth(2)
-            .linkDirectionalArrowLength(5)
-            .linkColor(pale)
-            .graphData(graphData)
-            .nodeId("id")
-            .nodeCanvasObject((node, ctx, globalScale) => {
-              const label = node.name;
-              const fontSize = 16 / globalScale;
-              ctx.font = `${fontSize}px Sans-Serif`;
-              const textWidth = ctx.measureText(label).width;
-              const bckgDimensions = [textWidth, fontSize].map(
-                (n) => n + fontSize * 0.5 // some padding
-              );
+            // Background
+            ctx.beginPath();
+            ctx.fillStyle = node.color;
+            ctx.roundRect(
+              node.x - bckgDimensions[0] / 2,
+              node.y - bckgDimensions[1] / 2,
+              ...bckgDimensions,
+              [2]
+            );
+            ctx.fill();
 
-              // Background
-              ctx.beginPath();
-              ctx.fillStyle = node.color;
-              ctx.roundRect(
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+            ctx.fillText(label, node.x, node.y);
+
+            node.__bckgDimensions = bckgDimensions; // to re-use in nodePointerAreaPaint
+          })
+          .nodePointerAreaPaint((node, color, ctx) => {
+            ctx.fillStyle = color;
+            const bckgDimensions = node.__bckgDimensions;
+            bckgDimensions &&
+              ctx.fillRect(
                 node.x - bckgDimensions[0] / 2,
                 node.y - bckgDimensions[1] / 2,
-                ...bckgDimensions,
-                [2]
+                ...bckgDimensions
               );
-              ctx.fill();
+          });
 
-              // Label
-              ctx.textAlign = "center";
-              ctx.textBaseline = "middle";
-              ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-              ctx.fillText(label, node.x, node.y);
-            });
-        } catch (error) {
-          console.log("Error load data...", error);
-        }
+        // Wider
+        Graph.d3Force("charge").strength(-100);
       })();
     </script>
   </body>
