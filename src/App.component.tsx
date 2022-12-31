@@ -1,7 +1,7 @@
-import logo from "./logo.svg";
-import "./App.css";
-import { Log } from "./utils";
-import { Hello } from "./components";
+import logo from "logo.svg";
+import "App.css";
+import { Log } from "utils";
+import { Hello } from "components";
 
 function App() {
   return (
