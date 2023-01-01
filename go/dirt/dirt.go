@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"github.com/ije/esbuild-internal/logger"
 )
@@ -24,6 +25,8 @@ type FileNode struct {
 }
 
 func Scan(sourceDir string) map[string]FileNode {
+	start := time.Now()
+
 	Files := map[string]FileNode{}
 
 	err := filepath.WalkDir(sourceDir, func(path string, file fs.DirEntry, err error) error {
@@ -32,7 +35,13 @@ func Scan(sourceDir string) map[string]FileNode {
 		}
 
 		// Populate files map
-		entryFound := FileNode{Id: path, Name: file.Name(), IsDir: file.IsDir(), Path: path, Dependencies: []string{}}
+		entryFound := FileNode{
+			Id:           path,
+			Name:         file.Name(),
+			IsDir:        file.IsDir(),
+			Path:         path,
+			Dependencies: []string{}}
+
 		Files[entryFound.Id] = entryFound
 		return nil
 	})
@@ -40,6 +49,11 @@ func Scan(sourceDir string) map[string]FileNode {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	fmt.Println("Scan", len(Files), "files in", time.Since(start))
+	fmt.Println()
+
+	fmt.Println("---------------------")
 
 	return Files
 }

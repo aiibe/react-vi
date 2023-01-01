@@ -4,9 +4,11 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>React Vi</title>
+    <title>React Vizu</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     <script src="//unpkg.com/force-graph"></script>
+    <script src="//unpkg.com/d3-quadtree"></script>
+    <script src="//unpkg.com/d3-force"></script>
   </head>
   <body style="margin: 0">
     <div id="3d-graph"></div>
@@ -22,43 +24,61 @@
         const pale = "#3b2f26";
         const orange = "#d6670d";
 
+        const files = Object.values(data).filter((f) => !f.IsDir);
+        const mapFilesById = files.reduce((acc, f) => {
+          acc[f.Id] = f;
+          return acc;
+        }, {});
+
         // Get .tsx nodes
-        const nodes = Object.values(data)
-          // .filter((name) => name.endsWith(".tsx") || name.endsWith(".ts"))
-          .map(({ Name, Id }) => ({
+        const nodes = files.map((element) => {
+          const { Name, Id, Path } = element;
+          const parts = Path.split("/").filter((part) => part !== Name);
+          const dirName = parts[parts.length - 1] + "/" + Name;
+          const name = ["index.ts", "index.tsx"].includes(Name)
+            ? dirName
+            : Name;
+
+          return {
             id: Id,
-            name: Name,
-            color: Name.endsWith(".tsx")
+            name,
+            color: name.endsWith(".tsx")
               ? blueLight
-              : Name.endsWith(".ts")
+              : name.endsWith(".ts")
               ? blueDark
-              : Name.endsWith(".css")
+              : name.endsWith(".css") || name.endsWith(".svg")
               ? orange
               : pale,
-          }));
+          };
+        });
 
         // Get nodes linked
-        const links = Object.values(data).reduce((acc, item) => {
+        const links = files.reduce((acc, item) => {
           const deps = item.Dependencies;
 
           if (!!deps.length) {
-            deps.forEach((id) =>
-              acc.push({
-                source: id,
-                target: item.Id,
-                color: "#353e73",
-              })
-            );
+            deps.forEach((id) => {
+              if (mapFilesById[id]) {
+                acc.push({
+                  source: id,
+                  target: item.Id,
+                  color: "#353e73",
+                });
+              }
+            });
           }
           return acc;
         }, []);
 
+        console.log(data, files);
+        console.log({ nodes, links });
+
         const Graph = ForceGraph()(document.getElementById("3d-graph"))
           .graphData({ nodes, links })
           .backgroundColor("#E9F0FF")
+          .linkDirectionalParticles(2)
+          .linkDirectionalParticleWidth(2)
           .linkColor(() => "#172D74")
-          .linkWidth(1)
-          .nodeRelSize(12)
           .nodeCanvasObject((node, ctx) => {
             const label = node.name;
             const fontSize = 6;
@@ -95,10 +115,15 @@
                 node.y - bckgDimensions[1] / 2,
                 ...bckgDimensions
               );
+          })
+          // .d3Force("charge", d3.forceManyBody().strength(-10))
+          .d3Force("link", d3.forceLink().distance(50))
+          .cooldownTime(1500)
+          .onEngineStop(() => {
+            Graph.d3Force("charge", null)
+              .d3Force("link", null)
+              .d3Force("center", null);
           });
-
-        // Wider
-        Graph.d3Force("charge").strength(-100);
       })();
     </script>
   </body>

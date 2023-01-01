@@ -2,13 +2,14 @@ package server
 
 import (
 	"net/http"
-	"souksyp/react-vi/html"
+	"souksyp/react-vi/public"
 	"souksyp/react-vi/store"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 func Start() {
+
 	// Init local server
 	e := echo.New()
 
@@ -16,16 +17,8 @@ func Start() {
 	e.HideBanner = true
 	e.HidePort = true
 
-	// Serves embedded index.html
-	e.GET("/", func(ctx echo.Context) error {
-		// Write some bytes to the response body
-		w := ctx.Response().Writer
-		_, err := w.Write(html.IndexPage)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
+	// Serve React app
+	e.StaticFS("/", public.FrontApp)
 
 	// Serves data as JSON for graph
 	e.GET("/data", func(c echo.Context) error {
